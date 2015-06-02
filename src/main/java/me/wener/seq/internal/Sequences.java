@@ -6,6 +6,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 import me.wener.seq.SequenceException;
@@ -111,8 +112,7 @@ public class Sequences
                     return compose(r, new Factor(inc, minVal));
                 }
             }
-            // TODO
-            return null;
+            return compose(r, new LongAscSequence(minVal, maxVal, inc, cycle));
         } else
         {
             if (inc == -1)
@@ -140,93 +140,8 @@ public class Sequences
                     return Suppliers.compose(new Factor(inc, maxVal), r);
                 }
             }
-            return null;
+            return compose(r, new LongDescSequence(minVal, maxVal, inc, cycle));
         }
-    }
-
-    public static Supplier<Long> create0(final Supplier<Long> src, final long minVal, final long maxVal, final long inc, final long cache, final boolean cycle)
-    {
-        check(minVal, maxVal, inc, cache, cycle);
-
-        Supplier<Long> r = src;
-        if (cache > 1)
-        {
-            r = new Scale(r, cache);
-        }
-        long min = minVal;
-        long max = maxVal;
-        if (inc != 1)
-        {
-            /*
-            基本逻辑,将区间转换为正区间,将递减转换为递增逻辑
-             */
-            long step = inc > 0 ? inc : -inc;
-            long offset = 0;
-            if (inc < 0)
-            {
-                long t = max;
-                if (min == Long.MIN_VALUE)
-                {
-                    max = Long.MAX_VALUE;
-                } else
-                {
-                    max = -min;
-                }
-                min = -t;
-            }
-            if (min < 0)
-            {
-                offset = inc < 0 ? -min : min;
-                min = 0;
-                if (max != Long.MAX_VALUE)
-                {
-                    max += -offset;
-                }
-            }
-            // 以下的 min 和 max 均为正数
-
-            // 距离归约
-            if (max != Long.MAX_VALUE && (max - min) % inc != 0)
-            {
-                long gap = (max - min) % inc;
-                max -= gap;
-            }
-
-            if (min % step != 0)
-            {
-                // 对齐最小值
-                long gap = min % step;
-                offset += gap;
-                min -= gap;
-                min /= step;
-                if (max != Long.MAX_VALUE)
-                {
-                    max -= gap;
-                    max /= step;
-                }
-            } else
-            {
-                min /= step;
-                if (max != Long.MAX_VALUE)
-                {
-                    // 对齐最大值时不需要 offset
-                    max /= step;
-                }
-            }
-
-
-            r = Suppliers.compose(new AscRange(min, max, cycle), r);
-            r = Suppliers.compose(new Multiplication(inc), r);
-            if (offset != 0)
-            {
-                r = Suppliers.compose(new Addition(offset), r);
-            }
-        } else
-        {
-            r = Suppliers.compose(new AscRange(min, max, cycle), r);
-        }
-
-        return r;
     }
 
     @NotThreadSafe
@@ -325,80 +240,91 @@ public class Sequences
         }
     }
 
-    /**
-     * 范围归约
-     */
-    private static class LongAscSequence implements Supplier<Long>
+    private static class LongAscSequence implements Function<Long, Long>
     {
-        final Supplier<Long> source;
-        long min;
-        long max;
-        long inc;
-        long distance;
-        boolean cycle;
-        Long c, n;
-        long margin;
+        final long min;
+        final long max;
+        final long inc;
+        final long num;
+        final boolean cycle;
+        volatile boolean more = true;
 
-        /*
-        boolean needsFlush = false;
-        if ((increment > 0 && value >= valueWithMargin) ||
-                (increment < 0 && value <= valueWithMargin)) {
-            valueWithMargin += increment * cacheSize;
-            needsFlush = true;
-        }
-        if ((increment > 0 && value > maxValue) ||
-                (increment < 0 && value < minValue)) {
-            if (cycle) {
-                value = increment > 0 ? minValue : maxValue;
-                valueWithMargin = value + (increment * cacheSize);
-                needsFlush = true;
-            } else {
-                throw DbException.get(ErrorCode.SEQUENCE_EXHAUSTED, getName());
-            }
-        }
-        if (needsFlush) {
-            flush(session);
-        }
-        long v = value;
-        value += increment;
-        return v;
-         */
-        private LongAscSequence(Supplier<Long> source, long min, long max, long inc, boolean cycle)
+        private LongAscSequence(long min, long max, long inc, boolean cycle)
         {
-            this.source = source;
             this.min = min;
+            this.max = max - min;// 计算 max 的适合从 0 开始
+            this.inc = inc;
+            this.cycle = cycle;
+            long d = max - min + 1;
+            num = d % inc == 0 ? d / inc : d / inc + 1;
+        }
+
+
+        @Nullable
+        @Override
+        public Long apply(final Long c)
+        {
+            if (!more)
+            {
+                throw new SequenceException("No more value");
+            }
+            Long v = c * inc;
+            if (cycle)
+            {
+                if (v > max)
+                {
+                    v = (c % num) * inc;
+                }
+            } else if (v + inc > max)
+            {
+                more = false;
+            }
+
+            return v + min;
+        }
+    }
+
+    private static class LongDescSequence implements Function<Long, Long>
+    {
+        final long min;
+        final long max;
+        final long inc;
+        final long num;
+        final boolean cycle;
+        volatile boolean more = true;
+
+        private LongDescSequence(long min, long max, long inc, boolean cycle)
+        {
+            this.min = min - max;
             this.max = max;
             this.inc = inc;
             this.cycle = cycle;
-            this.distance = max - min + 1;
+            long d = Math.abs(max - min) + 1;
+            num = d % inc == 0 ? d / Math.abs(inc) : d / Math.abs(inc) + 1;
         }
 
-        public Long apply(final Long v)
-        {
-            long c = v + min;
-            if (c > max)
-            {
-                if (cycle)
-                {
-                    c = v % distance + min;
-                } else
-                {
-                    throw new SequenceException("No more value, exceed the max");
-                }
-            }
-            return c;
-        }
 
+        @Nullable
         @Override
-        public Long get()
+        public Long apply(final Long c)
         {
-            if (c == null || c > margin)
+            if (!more)
             {
-                c = source.get() * inc + min;
-                margin = c + inc + min;
+                throw new SequenceException("No more value");
+            }
+            Long v = c * inc;
+            if (cycle)
+            {
+                if (v < min)
+                {
+                    v = (c % num) * inc;
+                }
+            } else if (v + inc < min)
+            {
+                more = false;
             }
 
-            return null;
+            return v + max;
         }
     }
 

@@ -63,16 +63,6 @@ public class Sequences
         return create(supplier(new AtomicLong()), min, max, inc, cache, cycle);
     }
 
-    private static <T, F> Supplier<T> compose(Supplier<F> supplier, Function<? super F, T> function)
-    {
-        return Suppliers.compose(function, supplier);
-    }
-
-    private static <A, B, C> Supplier<C> compose(Supplier<A> supplier, Function<A, ? extends B> a, Function<B, C> b)
-    {
-        return Suppliers.compose(MoreFunctions.compose(a, b), supplier);
-    }
-
     public static Supplier<Long> asc(final Supplier<Long> src, final long cache)
     {
         return create(src, 1, Long.MAX_VALUE, 1, cache, false);
@@ -106,23 +96,23 @@ public class Sequences
                         return r;
                     } else
                     {
-                        return compose(r, new Addition(minVal));
+                        return MoreSuppliers.compose(r, new Addition(minVal));
                     }
                 }
-                return compose(r, new AscRange(minVal, maxVal, cycle));
+                return MoreSuppliers.compose(r, new AscRange(minVal, maxVal, cycle));
             }
 
             if (maxVal == Long.MAX_VALUE)
             {
                 if (minVal == 0)
                 {
-                    return compose(r, new Multiplication(inc));
+                    return MoreSuppliers.compose(r, new Multiplication(inc));
                 } else
                 {
-                    return compose(r, new Factor(inc, minVal));
+                    return MoreSuppliers.compose(r, new Factor(inc, minVal));
                 }
             }
-            return compose(r, new LongAscSequence(minVal, maxVal, inc, cycle));
+            return MoreSuppliers.compose(r, new LongAscSequence(minVal, maxVal, inc, cycle));
         } else
         {
             if (inc == -1)
@@ -131,13 +121,13 @@ public class Sequences
                 {
                     if (maxVal == 0)
                     {
-                        return compose(r, FUNC_NEG);
+                        return MoreSuppliers.compose(r, FUNC_NEG);
                     } else
                     {
-                        return compose(r, new Factor(-1, maxVal));
+                        return MoreSuppliers.compose(r, new Factor(-1, maxVal));
                     }
                 }
-                return compose(r, FUNC_NEG, new DescRange(minVal, maxVal, cycle));
+                return MoreSuppliers.compose(r, FUNC_NEG, new DescRange(minVal, maxVal, cycle));
             }
 
             if (minVal == Long.MIN_VALUE)
@@ -150,7 +140,7 @@ public class Sequences
                     return Suppliers.compose(new Factor(inc, maxVal), r);
                 }
             }
-            return compose(r, new LongDescSequence(minVal, maxVal, inc, cycle));
+            return MoreSuppliers.compose(r, new LongDescSequence(minVal, maxVal, inc, cycle));
         }
     }
 

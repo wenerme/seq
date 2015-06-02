@@ -75,7 +75,9 @@ public class ZKPSupplierPerformance
             client = CuratorFrameworkFactory.newClient(connectString, new RetryOneTime(8000));
             client.start();
             client.create().creatingParentsIfNeeded().withProtection().forPath("/seq/test/node");
-            supplier = Sequences.asc(new ZookeeperSupplier(client, "/seq/test/node"), 1000);
+            supplier = new ZookeeperSupplier(client, "/seq/test/node");
+//            supplier = MoreSuppliers.prefetch(supplier, 10);
+            supplier = Sequences.asc(supplier, 1000);
         }
 
         @TearDown(Level.Trial)

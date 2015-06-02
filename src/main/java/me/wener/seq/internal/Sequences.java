@@ -73,6 +73,19 @@ public class Sequences
         return Suppliers.compose(MoreFunctions.compose(a, b), supplier);
     }
 
+    public static Supplier<Long> asc(final Supplier<Long> src, final long cache)
+    {
+        return create(src, 1, Long.MAX_VALUE, 1, cache, false);
+    }
+
+    public static Supplier<Long> desc(final Supplier<Long> src, final long cache)
+    {
+        return create(src, Long.MIN_VALUE, -1, -1, cache, false);
+    }
+
+    /**
+     * 使用指定的条件创建
+     */
     public static Supplier<Long> create(final Supplier<Long> src, final long minVal, final long maxVal, final long inc, final long cache, final boolean cycle)
     {
         check(minVal, maxVal, inc, cache, cycle);
@@ -82,10 +95,7 @@ public class Sequences
             r = new Scale(r, cache);
         }
 
-        int sig = Long.signum(inc);
-        long min = minVal;
-        long max = maxVal;
-        if (sig > 0)
+        if (inc > 0)
         {
             if (inc == 1)
             {
@@ -240,6 +250,7 @@ public class Sequences
         }
     }
 
+    @ThreadSafe
     private static class LongAscSequence implements Function<Long, Long>
     {
         final long min;
@@ -284,6 +295,7 @@ public class Sequences
         }
     }
 
+    @ThreadSafe
     private static class LongDescSequence implements Function<Long, Long>
     {
         final long min;
@@ -328,6 +340,7 @@ public class Sequences
         }
     }
 
+    @ThreadSafe
     private static class AtomicSupplier implements Supplier<Long>
     {
         private final AtomicLong v;
@@ -341,6 +354,7 @@ public class Sequences
         }
     }
 
+    @ThreadSafe
     private static class Multiplication implements Function<Long, Long>
     {
         final long val;
@@ -357,6 +371,7 @@ public class Sequences
         }
     }
 
+    @ThreadSafe
     private static class Factor implements Function<Long, Long>
     {
         final long a, b;
@@ -374,6 +389,7 @@ public class Sequences
         }
     }
 
+    @ThreadSafe
     private static class Addition implements Function<Long, Long>
     {
         final long val;

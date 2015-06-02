@@ -1,0 +1,87 @@
+package me.wener.seq.internal;
+
+import com.google.common.base.Supplier;
+import java.io.IOException;
+import me.wener.seq.internal.zk.ZookeeperSupplier;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.RetryOneTime;
+import org.apache.curator.test.TestingServer;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+
+/**
+ * @author <a href="http://github.com/wenerme">wener</a>
+ */
+@State(Scope.Benchmark)
+public class ZKPSupplierPerformance
+{
+    private static String connectString;
+    private static TestingServer server;
+
+    public static void main(String[] args) throws RunnerException
+    {
+        Options opt = new OptionsBuilder()
+                .include(ZKPSupplierPerformance.class.getSimpleName())
+                .warmupIterations(5)
+                .measurementIterations(5)
+                .threads(4)
+                .forks(1)
+                .build();
+
+        new Runner(opt).run();
+    }
+
+    @Setup
+    public static void setup() throws Exception
+    {
+        server = new TestingServer(8788);
+        connectString = server.getConnectString();
+        System.out.println("Zookeeper ConnectString:" + connectString);
+    }
+
+    @TearDown
+    public static void stop() throws IOException
+    {
+        server.close();
+    }
+
+    @Benchmark
+    @BenchmarkMode(Mode.Throughput)
+    public void get(ClientState c)
+    {
+        c.supplier.get();
+    }
+
+    @State(Scope.Thread)
+    public static class ClientState
+    {
+        CuratorFramework client;
+        Supplier<Long> supplier;
+
+        @Setup(Level.Trial)
+        public void up() throws Exception
+        {
+            client = CuratorFrameworkFactory.newClient(connectString, new RetryOneTime(8000));
+            client.start();
+            client.create().creatingParentsIfNeeded().withProtection().forPath("/seq/test/node");
+            supplier = Sequences.asc(new ZookeeperSupplier(client, "/seq/test/node"), 1000);
+        }
+
+        @TearDown(Level.Trial)
+        public void down()
+        {
+            client.close();
+        }
+    }
+}

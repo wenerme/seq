@@ -3,39 +3,31 @@ package me.wener.seq.internal;
 
 import me.wener.seq.SequenceMeta;
 
-public abstract class AbstractSequenceMeta implements SequenceMeta
-{
+public abstract class AbstractSequenceMeta implements SequenceMeta {
 
     @Override
-    public boolean isAscending()
-    {
+    public boolean isAscending() {
         return getIncrement() > 0;
     }
 
     @Override
-    public boolean isDescending()
-    {
+    public boolean isDescending() {
         return getIncrement() < 0;
     }
 
     @Override
-    public boolean isUnBounded()
-    {
-        if (isAscending())
-        {
+    public boolean isUnBounded() {
+        if (isAscending()) {
             return getMaxValue() == Long.MAX_VALUE;
-        } else if (isDescending())
-        {
+        } else if (isDescending()) {
             return getMinValue() == Long.MIN_VALUE;
-        } else
-        {
+        } else {
             throw new IllegalStateException("Can not determinate asc or desc");
         }
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return Metas.toOption(this).toString();
     }
 }

@@ -1,13 +1,10 @@
-package me.wener.seq.internal.util;
+package me.wener.seq.util;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
+import com.google.common.base.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.Invokable;
+
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -16,29 +13,22 @@ import java.util.Map;
 /**
  * @author <a href="http://github.com/wenerme">wener</a>
  */
-public class Options
-{
+public class Options {
     private static final Splitter[] splitters = new Splitter[255];// Order is matter
     private final static Splitter COMMA_SPLITTER = splitter(',');
     private static final Joiner.MapJoiner JOINER = Joiner.on(',')
-                                                         .withKeyValueSeparator("=");
+            .withKeyValueSeparator("=");
 
-    private Options()
-    {
+    private Options() {
     }
 
-    static Splitter splitter(char c)
-    {
+    static Splitter splitter(char c) {
         Splitter s;
-        if (c < 255)
-        {
+        if (c < 255) {
             s = splitters[c];
-            if (s == null)
-            {
-                synchronized (splitters)
-                {
-                    if (splitters[c] == null)
-                    {
+            if (s == null) {
+                synchronized (splitters) {
+                    if (splitters[c] == null) {
                         splitters[c] = Splitter
                                 .on(c)
                                 .omitEmptyStrings()
@@ -47,22 +37,19 @@ public class Options
                 }
             }
             s = splitters[c];
-        } else
-        {
+        } else {
             s = Splitter.on(c)
-                        .omitEmptyStrings()
-                        .trimResults();
+                    .omitEmptyStrings()
+                    .trimResults();
         }
         return s;
     }
 
-    public static Option create()
-    {
+    public static Option create() {
         return new Opt();
     }
 
-    public static Option immutable(Option o)
-    {
+    public static Option immutable(Option o) {
         return new Opt(ImmutableMap.copyOf(o.options()));
     }
 
@@ -76,15 +63,12 @@ public class Options
      *
      * @param opt 选项字符串
      */
-    public static Option parse(String opt)
-    {
+    public static Option parse(String opt) {
         Option option = new Opt();
-        if (opt == null)
-        {
+        if (opt == null) {
             return option;
         }
-        for (String s : COMMA_SPLITTER.split(opt))
-        {
+        for (String s : COMMA_SPLITTER.split(opt)) {
             int i = s.indexOf('=');
             if (i < 1)
                 option.options().put(s.trim(), "true");
@@ -94,46 +78,37 @@ public class Options
         return option;
     }
 
-    public static Option from(Option o, String prefix)
-    {
+    public static Option from(Option o, String prefix) {
         return from(o.options(), prefix);
     }
 
-    public static Option from(Map<String, String> o, String prefix)
-    {
+    public static Option from(Map<String, String> o, String prefix) {
         return from(o, prefix, ".");
     }
 
-    public static Option from(Map<String, String> o, String prefix, String delimiter)
-    {
+    public static Option from(Map<String, String> o, String prefix, String delimiter) {
         Option opt = parse(o.get(prefix));
-        for (Map.Entry<String, String> entry : o.entrySet())
-        {
+        for (Map.Entry<String, String> entry : o.entrySet()) {
             String key = entry.getKey();
-            if (key.startsWith(prefix + delimiter) && key.length() > prefix.length())
-            {
+            if (key.startsWith(prefix + delimiter) && key.length() > prefix.length()) {
                 opt.options().put(key.substring(prefix.length() + delimiter.length()), entry.getValue());
             }
         }
         return opt;
     }
 
-    public static Option from(Map<String, String> map)
-    {
+    public static Option from(Map<String, String> map) {
         return new Opt(map);
     }
 
-    private static class Opt implements Option
-    {
+    private static class Opt implements Option {
         final Map<String, String> options;
 
-        public Opt(Map<String, String> options)
-        {
+        public Opt(Map<String, String> options) {
             this.options = options;
         }
 
-        public Opt()
-        {
+        public Opt() {
             options = Maps.newConcurrentMap();
         }
 
@@ -142,8 +117,7 @@ public class Options
          * @param flag 标志名
          * @return 是否包含标志
          */
-        public boolean contain(String flag)
-        {
+        public boolean contain(String flag) {
             String s = get(flag);
             return s != null && Boolean.parseBoolean(s);
         }
@@ -152,8 +126,7 @@ public class Options
          * @param opt 选项名
          * @return 选项值
          */
-        public String get(String opt)
-        {
+        public String get(String opt) {
             return options.get(opt);
         }
 
@@ -162,73 +135,61 @@ public class Options
          * @param def 如果选项未定义,则返回该默认值
          * @return 选项值
          */
-        public String get(String opt, String def)
-        {
+        public String get(String opt, String def) {
             return Strings.isNullOrEmpty(get(opt)) ? def : get(opt);
         }
 
         @SuppressWarnings("unchecked")
-        public <T extends Serializable> T get(String opt, T def)
-        {
+        public <T extends Serializable> T get(String opt, T def) {
             String s = get(opt);
-            if (s == null)
-            {
+            if (s == null) {
                 return def;
             }
             return (T) get(opt, def.getClass());
         }
 
         @SuppressWarnings("unchecked")
-        public <T extends Serializable> T get(String opt, Class<T> type)
-        {
+        public <T extends Serializable> T get(String opt, Class<T> type) {
             String s = get(opt);
-            if (s == null)
-            {
+            if (s == null) {
                 return null;
             }
-            if (type == String.class)
-            {
+            if (type == String.class) {
                 return (T) s;
             }
 
 
-            try
-            {
+            try {
                 Invokable<?, Object> method = null;
-                try
-                {
+                try {
                     // Integer, Long, Byte ....
                     method = Invokable.from(type.getMethod("decode", String.class));
                     if (!(method.isPublic() && method.isStatic())) method = null;
-                } catch (NoSuchMethodException ignored) { }
-                if (method == null)
-                {
-                    try
-                    {
+                } catch (NoSuchMethodException ignored) {
+                }
+                if (method == null) {
+                    try {
                         // custom
                         method = Invokable.from(type.getMethod("fromString", String.class));
                         if (!(method.isPublic() && method.isStatic())) method = null;
-                    } catch (NoSuchMethodException ignored) { }
+                    } catch (NoSuchMethodException ignored) {
+                    }
                 }
 
-                if (method == null)
-                {
-                    try
-                    {
+                if (method == null) {
+                    try {
                         method = Invokable.from(type.getMethod("valueOf", String.class));
                         if (!(method.isPublic() && method.isStatic())) method = null;
-                    } catch (NoSuchMethodException ignored) { }
+                    } catch (NoSuchMethodException ignored) {
+                    }
                 }
 
-                if (method != null)
-                {
+                if (method != null) {
                     return (T) method.invoke(null, s);
                 }
-            } catch (InvocationTargetException e)
-            {
+            } catch (InvocationTargetException e) {
                 Throwables.propagate(e.getCause());
-            } catch (IllegalAccessException e)
-            {
+            } catch (IllegalAccessException e) {
                 Throwables.propagate(e);
             }
 
@@ -236,14 +197,12 @@ public class Options
         }
 
         @Override
-        public List<String> list(String key, char del)
-        {
+        public List<String> list(String key, char del) {
             return splitter(del).splitToList(get(key, ""));
         }
 
         @Override
-        public List<String> list(String key)
-        {
+        public List<String> list(String key) {
             return list(key, '|');
         }
 
@@ -254,26 +213,21 @@ public class Options
          * @param opt 选项名
          * @param val 选项值
          */
-        public Option set(String opt, String val)
-        {
-            if (val == null)
-            {
+        public Option set(String opt, String val) {
+            if (val == null) {
                 options.remove(opt);
-            } else
-            {
+            } else {
                 options.put(opt, val);
             }
             return this;
         }
 
-        public Option set(String opt, Serializable val)
-        {
+        public Option set(String opt, Serializable val) {
             set(opt, val.toString());
             return this;
         }
 
-        public Option remove(String opt)
-        {
+        public Option remove(String opt) {
             options.remove(opt);
             return this;
         }
@@ -283,32 +237,26 @@ public class Options
          *
          * @param flag 标记
          */
-        public Option mark(String flag)
-        {
+        public Option mark(String flag) {
             options.put(flag, "true");
             return this;
         }
 
-        public Option load(Option opt, boolean override)
-        {
-            for (Map.Entry<String, String> entry : opt.options().entrySet())
-            {
-                if (!options.containsKey(entry.getKey()) || override)
-                {
+        public Option load(Option opt, boolean override) {
+            for (Map.Entry<String, String> entry : opt.options().entrySet()) {
+                if (!options.containsKey(entry.getKey()) || override) {
                     options.put(entry.getKey(), entry.getValue());
                 }
             }
             return this;
         }
 
-        public Map<String, String> options()
-        {
+        public Map<String, String> options() {
             return options;
         }
 
         @Override
-        public boolean equals(Object o)
-        {
+        public boolean equals(Object o) {
             if (this == o) return true;
             if (!(o instanceof Option)) return false;
             Option option = (Option) o;
@@ -316,14 +264,12 @@ public class Options
         }
 
         @Override
-        public int hashCode()
-        {
+        public int hashCode() {
             return Objects.hashCode(options);
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return Options.JOINER.join(options);
         }
     }

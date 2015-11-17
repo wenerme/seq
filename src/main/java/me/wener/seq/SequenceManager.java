@@ -1,14 +1,13 @@
 package me.wener.seq;
 
-import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.Set;
 
 /**
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 @ThreadSafe
-public interface SequenceManager
-{
+public interface SequenceManager {
     void create(SequenceMeta meta);
 
     void create(SequenceMeta meta, long startValue);

@@ -1,9 +1,6 @@
 package me.wener.seq.internal;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import me.wener.seq.internal.zk.ZookeeperSupplier;
+import me.wener.seq.persistence.ZookeeperSupplier;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
@@ -11,6 +8,10 @@ import org.apache.curator.test.TestingServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author <a href="http://github.com/wenerme">wener</a>

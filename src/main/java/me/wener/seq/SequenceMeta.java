@@ -5,8 +5,7 @@ package me.wener.seq;
  *
  * @see <a href=http://docs.oracle.com/cd/B28359_01/server.111/b28286/statements_6015.htm#SQLRF01314>Oracle CREATE SEQUENCE</a>
  */
-public interface SequenceMeta
-{
+public interface SequenceMeta {
     String getName();
 
     /**
@@ -43,13 +42,13 @@ public interface SequenceMeta
      * a given cycle of sequence numbers. Therefore, the maximum value allowed
      * for CACHE must be less than the value determined by the following
      * formula:
-     * <p/>
+     * <p>
      * <code>(CEIL (MAXVALUE - MINVALUE)) / ABS (INCREMENT)</code>
-     * <p/>
+     * <p>
      * If a system failure occurs, then all cached sequence values that
      * have not been used in committed DML statements are lost. The potential
      * number of lost values is equal to the value of the CACHE parameter.
-     * <p/>
+     * <p>
      * <b>注意</b>该值与具体实现相关
      */
     long getCache();
@@ -60,7 +59,7 @@ public interface SequenceMeta
      * sequence reaches its maximum value, it generates its minimum value.
      * After a descending sequence reaches its minimum, it generates its maximum
      * value.
-     * <p/>
+     * <p>
      * <b>注意</b>该值与具体实现相关
      */
     boolean isCycle();
@@ -70,11 +69,11 @@ public interface SequenceMeta
      * of request. This clause is useful if you are using the sequence numbers
      * as timestamps. Guaranteeing order is usually not important for sequences
      * used to generate primary keys.
-     * <p/>
+     * <p>
      * ORDER is necessary only to guarantee ordered generation if you are using
      * Oracle Real Application Clusters. If you are using exclusive mode, then
      * sequence numbers are always generated in order.
-     * <p/>
+     * <p>
      * <b>注意</b>该值与具体实现相关
      */
     boolean isOrder();

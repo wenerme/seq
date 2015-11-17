@@ -6,8 +6,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 @ThreadSafe
-public interface SequenceService
-{
+public interface SequenceService {
     String getMeta(String name);
 
     /**

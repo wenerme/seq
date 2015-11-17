@@ -6,56 +6,71 @@ import me.wener.seq.SequenceMeta;
 /**
  * @author <a href="http://github.com/wenerme">wener</a>
  */
-public abstract class AbstractSequence implements SequenceMeta, Sequence
-{
+public abstract class AbstractSequence implements SequenceMeta, Sequence {
     protected final SequenceMeta meta;
 
-    public AbstractSequence(SequenceMeta meta)
-    {
+    public AbstractSequence(SequenceMeta meta) {
         this.meta = meta;
     }
 
     @Override
-    public String getName() {return getMeta().getName();}
+    public String getName() {
+        return getMeta().getName();
+    }
 
     @Override
-    public long getMaxValue() {return getMeta().getMaxValue();}
+    public long getMaxValue() {
+        return getMeta().getMaxValue();
+    }
 
     @Override
-    public long getMinValue() {return getMeta().getMinValue();}
+    public long getMinValue() {
+        return getMeta().getMinValue();
+    }
 
     @Override
-    public long getIncrement() {return getMeta().getIncrement();}
+    public long getIncrement() {
+        return getMeta().getIncrement();
+    }
 
     @Override
-    public long getCache() {return getMeta().getCache();}
+    public long getCache() {
+        return getMeta().getCache();
+    }
 
     @Override
-    public boolean isCycle() {return getMeta().isCycle();}
+    public boolean isCycle() {
+        return getMeta().isCycle();
+    }
 
     @Override
-    public boolean isOrder() {return getMeta().isOrder();}
+    public boolean isOrder() {
+        return getMeta().isOrder();
+    }
 
     @Override
-    public boolean isAscending() {return getMeta().isAscending();}
+    public boolean isAscending() {
+        return getMeta().isAscending();
+    }
 
     @Override
-    public boolean isDescending() {return getMeta().isDescending();}
+    public boolean isDescending() {
+        return getMeta().isDescending();
+    }
 
     @Override
-    public boolean isUnBounded() {return getMeta().isUnBounded();}
+    public boolean isUnBounded() {
+        return getMeta().isUnBounded();
+    }
 
-    public SequenceMeta getMeta()
-    {
+    public SequenceMeta getMeta() {
         return meta;
     }
 
     @Override
-    public long[] getNextValue(int count)
-    {
+    public long[] getNextValue(int count) {
         long[] sequences = new long[count];
-        for (int i = 0; i < count; i++)
-        {
+        for (int i = 0; i < count; i++) {
             sequences[i] = getNextValue();
         }
         return sequences;

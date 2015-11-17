@@ -1,4 +1,4 @@
-package me.wener.seq.internal.util;
+package me.wener.seq.util;
 
 import java.io.Serializable;
 import java.util.List;
@@ -7,8 +7,7 @@ import java.util.Map;
 /**
  * 选项信息类
  */
-public interface Option
-{
+public interface Option {
 
     /**
      * @param flag 标志名

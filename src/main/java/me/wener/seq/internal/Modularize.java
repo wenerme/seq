@@ -1,22 +1,29 @@
 package me.wener.seq.internal;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.reflect.ClassPath;
 import com.google.inject.AbstractModule;
+import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import javax.inject.Named;
 import java.io.IOException;
 import java.util.Map;
 
 /**
+ * Decouple implementation internal
+ *
  * @author wener
  * @since 15/11/18
  */
-public class MoreModules {
+public class Modularize {
     @SuppressWarnings("unchecked")
     public static Map<String, Class<? extends Module>> scanNamed(ClassLoader cl, String pkg) throws IOException {
         UnmodifiableIterator<ClassPath.ClassInfo> iterator = ClassPath.from(cl).getTopLevelClassesRecursive(pkg).iterator();
@@ -60,5 +67,14 @@ public class MoreModules {
                 }
             }
         };
+    }
+
+    public static Multibinder<Service> serviceBinder(Binder binder) {
+        return Multibinder.newSetBinder(binder, Service.class);
+    }
+
+    public static Config serviceConfig(Config c, String svc) {
+        String path = "service." + Preconditions.checkNotNull(svc);
+        return c.hasPath(path) ? c.getConfig(path) : ConfigFactory.empty();
     }
 }

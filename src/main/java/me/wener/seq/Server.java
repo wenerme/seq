@@ -9,7 +9,7 @@ import com.google.inject.*;
 import com.google.inject.multibindings.Multibinder;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import me.wener.seq.internal.MoreModules;
+import me.wener.seq.internal.Modularize;
 import me.wener.seq.internal.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +62,7 @@ public class Server extends AbstractService {
         @Override
         protected void configure() {
             try {
-                install(MoreModules.installScanNamed(this.getClass().getClassLoader(), this.getClass().getPackage().getName(), new Predicate<Map.Entry<String, Class<? extends Module>>>() {
+                install(Modularize.installScanNamed(this.getClass().getClassLoader(), this.getClass().getPackage().getName(), new Predicate<Map.Entry<String, Class<? extends Module>>>() {
                     @Override
                     public boolean apply(@Nullable Map.Entry<String, Class<? extends Module>> input) {
                         if (input == null) {

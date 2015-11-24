@@ -3,6 +3,7 @@ package me.wener.seq.internal;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
+import me.wener.seq.SequenceDeclare;
 import me.wener.seq.SequenceException;
 
 import javax.annotation.Nullable;
@@ -29,6 +30,7 @@ public class Sequences {
 
     public static void check(long min, long max, long inc, long cache, boolean cycle) {
         checkArgument(cache >= 1, "Cache must >= 1");
+        checkArgument(cache < Math.ceil(max - min) / Math.abs(inc), "Cache too large");
         checkArgument(inc != 0, "Increment must != 0");
         checkArgument(max > min, "Max <= Min");
         checkArgument(!(max == Long.MAX_VALUE && min == Long.MIN_VALUE), "No max and min");
@@ -49,6 +51,10 @@ public class Sequences {
         }
     }
 
+    public static Supplier<Long> create(SequenceDeclare seq) {
+        return create(seq.getMin(), seq.getMax(), seq.getIncrement(), seq.getCache(), seq.isCycle());
+    }
+
     /**
      * Create with a atomic long
      */
@@ -56,12 +62,17 @@ public class Sequences {
         return create(supplier(new AtomicLong()), min, max, inc, cache, cycle);
     }
 
-    public static Supplier<Long> asc(final Supplier<Long> src, final long cache) {
-        return create(src, 1, Long.MAX_VALUE, 1, cache, false);
+    public static Supplier<Long> create(final Supplier<Long> src, SequenceDeclare seq) {
+        return create(src, seq.getMin(), seq.getMax(), seq.getIncrement(), seq.getCache(), seq.isCycle());
     }
 
     public static Supplier<Long> desc(final Supplier<Long> src, final long cache) {
         return create(src, Long.MIN_VALUE, -1, -1, cache, false);
+    }
+
+    public static long calc(long base, SequenceDeclare seq) {
+        // TODO
+        return base;
     }
 
     /**

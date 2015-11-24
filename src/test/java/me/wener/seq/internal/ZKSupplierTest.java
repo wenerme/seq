@@ -16,14 +16,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="http://github.com/wenerme">wener</a>
  */
-public class ZKSupplierTest
-{
+public class ZKSupplierTest {
     private static CuratorFramework client;
     private static TestingServer server;
 
     @BeforeClass
-    public static void setup() throws Exception
-    {
+    public static void setup() throws Exception {
         server = new TestingServer(8788);
         String connectString = server.getConnectString();
         System.out.println("Zookeeper 链接字符串:" + connectString);
@@ -32,19 +30,16 @@ public class ZKSupplierTest
     }
 
     @AfterClass
-    public static void stop() throws IOException
-    {
+    public static void stop() throws IOException {
         client.close();
         server.close();
     }
 
     @Test
-    public void test() throws Exception
-    {
+    public void test() throws Exception {
         client.create().creatingParentsIfNeeded().withProtection().forPath("/seq/test/node");
         ZookeeperSupplier supplier = new ZookeeperSupplier(client, "/seq/test/node");
-        for (long i = 0; i < 100; i++)
-        {
+        for (long i = 0; i < 100; i++) {
             assertEquals(i, (long) supplier.get());
         }
     }

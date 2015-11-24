@@ -8,7 +8,11 @@ import javax.annotation.concurrent.ThreadSafe;
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 @ThreadSafe
-public interface Sequence extends SequenceMeta {
+public interface Sequence {
+    String getName();
+
+    long getId();
+
     /**
      * @return 返回上一次调用 {@link #getNextValue()} 返回的值, 不保证返回的值为确切的当前值, 只保证 Happen-Before
      */

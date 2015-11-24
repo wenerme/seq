@@ -8,17 +8,13 @@ import java.util.Set;
  */
 @ThreadSafe
 public interface SequenceManager {
-    void create(SequenceMeta meta);
+    void create(SequenceDeclare attrs);
 
-    void create(SequenceMeta meta, long startValue);
-
-    void update(SequenceMeta meta);
-
-    void delete(String name);
-
-    Sequence sequence(String name);
-
-    SequenceMeta meta(String name);
+    void drop(String name);
 
     Set<String> sequences();
+
+    long next(String name);
+
+    long reset(String name, long reset);
 }

@@ -20,11 +20,16 @@ public abstract class AbstractServiceAdapter extends AbstractService implements 
 
     @Override
     protected final void doStart() {
+        Thread t = Thread.currentThread();
+        String name = t.getName();
+        t.setName(getName() + "-start");
         try {
             adapterStart();
             notifyStarted();
         } catch (Exception e) {
             notifyFailed(e);
+        } finally {
+            t.setName(name);
         }
     }
 
@@ -34,11 +39,16 @@ public abstract class AbstractServiceAdapter extends AbstractService implements 
 
     @Override
     protected final void doStop() {
+        Thread t = Thread.currentThread();
+        String name = t.getName();
+        t.setName(getName() + "-stop");
         try {
             adapterStop();
             notifyStopped();
         } catch (Exception e) {
             notifyFailed(e);
+        } finally {
+            t.setName(name);
         }
     }
 }

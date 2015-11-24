@@ -6,7 +6,6 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.*;
-import com.google.inject.multibindings.Multibinder;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import me.wener.seq.internal.Modularize;
@@ -15,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.inject.Singleton;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +69,7 @@ public class Server extends AbstractService {
                             return false;
                         }
                         String path = "services." + input.getKey() + ".enable";
+                        // TODO Should use missing is enabled
                         boolean enabled = !config.hasPath(path) || config.getBoolean(path);
                         log.debug("Service {} is {}", input.getKey(), enabled ? "enabled" : "disabled");
                         return enabled;
@@ -77,16 +78,16 @@ public class Server extends AbstractService {
             } catch (IOException e) {
                 Throwables.propagate(e);
             }
-
-            Multibinder<Service> binder = Multibinder.newSetBinder(binder(), Service.class);
         }
 
         @Provides
+        @Singleton
         private Server server() {
             return Server.this;
         }
 
         @Provides
+        @Singleton
         private Config config() {
             return config;
         }
@@ -171,7 +172,7 @@ public class Server extends AbstractService {
                     serviceManager.awaitHealthy(30, TimeUnit.SECONDS);
                     break;
                 } catch (TimeoutException e) {
-                    log.warn("Start start wait tool long : {} - {}", serviceManager.servicesByState(), serviceManager.startupTimes());
+                    log.warn("Start service manager wait tool long : {} - {}", serviceManager.servicesByState(), serviceManager.startupTimes());
                 }
             }
 
@@ -185,7 +186,7 @@ public class Server extends AbstractService {
                     throw new TimeoutException("Start service timeout");
                 }
             }
-            log.debug("Startup times {}", serviceManager.startupTimes());
+            log.debug("Startup time {}", serviceManager.startupTimes());
         }
 
         public void asyncStop() {

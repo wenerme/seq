@@ -8,13 +8,31 @@ import java.util.Set;
  */
 @ThreadSafe
 public interface SequenceManager {
-    void create(SequenceDeclare attrs);
+    void create(SequenceDeclare declare);
 
     void drop(String name);
 
+    /**
+     * Update sequence declare.Will reset this sequence to initial value.
+     */
+    void update(SequenceDeclare declare);
+
     Set<String> sequences();
 
+    SequenceDeclare get(String name);
+
+    /**
+     * Get the next value of this  sequence
+     */
     long next(String name);
 
+    /**
+     * Reset this sequence to this value.
+     */
     long reset(String name, long reset);
+
+    /**
+     * @return Max or min for unordered sequence ?
+     */
+    long current(String name);
 }

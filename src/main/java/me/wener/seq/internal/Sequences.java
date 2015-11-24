@@ -15,6 +15,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ * Make a sequence generator from a [0,+∞].
+ * This implementation is focus on performance, if java 8 is available, should rewrite this in lambda.
+ *
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 public class Sequences {
@@ -66,12 +69,10 @@ public class Sequences {
         return create(src, seq.getMin(), seq.getMax(), seq.getIncrement(), seq.getCache(), seq.isCycle());
     }
 
-    public static Supplier<Long> desc(final Supplier<Long> src, final long cache) {
-        return create(src, Long.MIN_VALUE, -1, -1, cache, false);
-    }
 
-    public static long calc(long base, SequenceDeclare seq) {
-        // TODO
+    static long calc(long base, SequenceDeclare seq) {
+        // TODO Calculate the max or min value for this base with this declare
+
         return base;
     }
 
@@ -215,6 +216,7 @@ public class Sequences {
         final long inc;
         final long num;
         final boolean cycle;
+        // once update
         volatile boolean more = true;
 
         private LongAscSequence(long min, long max, long inc, boolean cycle) {

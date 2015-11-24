@@ -30,4 +30,5 @@ public class SequenceException extends RuntimeException {
         super(cause);
         this.code = code;
     }
+
 }

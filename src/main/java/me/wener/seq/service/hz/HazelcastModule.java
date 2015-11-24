@@ -12,6 +12,7 @@ import me.wener.seq.internal.Modularize;
 
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 import java.util.Map;
 
 /**
@@ -27,6 +28,7 @@ public class HazelcastModule extends AbstractModule {
     }
 
     @Provides
+    @Singleton
     private HazelcastInstance hz(Config root) {
         com.hazelcast.config.Config c = new com.hazelcast.config.Config();
         Config config = Modularize.serviceConfig(root, "hazelcast");

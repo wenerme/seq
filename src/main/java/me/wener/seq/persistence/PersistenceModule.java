@@ -1,6 +1,7 @@
 package me.wener.seq.persistence;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
 import javax.inject.Named;
 
@@ -12,6 +13,8 @@ import javax.inject.Named;
 public class PersistenceModule extends AbstractModule {
     @Override
     protected void configure() {
-
+        Multibinder<PersistenceProvider> setBinder = Multibinder.newSetBinder(binder(), PersistenceProvider.class);
+        setBinder.addBinding().to(InMemoryPersistenceProvider.class);
+        setBinder.addBinding().to(RedisPersistenceProvider.class);
     }
 }

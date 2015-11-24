@@ -14,11 +14,16 @@ Sequence logic based on SQL like [Oracle CREATE SEQUENCE](http://docs.oracle.com
 * Persistence
     * Zookeeper
     * Redis
+    * In memory for test
+    * In grid
 * [ ] Distributed Sequence Server
     by Hazelcast
 * [ ] Server
     * [ ] gRPC
     * [ ] ØMQ
+
+# Limitation
+* Sequence number is a Java long, the range is `[1,2^63]`
 
 # Motivation
 
@@ -26,3 +31,9 @@ Sequence logic based on SQL like [Oracle CREATE SEQUENCE](http://docs.oracle.com
 * Learn and use ØMQ
 * Implement a sequence generator :smile:
 * Play Hazelcast
+
+<!--
+Super fast
+Ordered and Unordered
+Used to handled exactly once delievery and Gurrenty ordered message.
+-->

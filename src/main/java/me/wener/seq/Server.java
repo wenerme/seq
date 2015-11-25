@@ -9,7 +9,9 @@ import com.google.inject.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import me.wener.seq.internal.Modularize;
+import me.wener.seq.internal.SequenceManagerModule;
 import me.wener.seq.internal.Service;
+import me.wener.seq.persistence.PersistenceModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +31,12 @@ public class Server extends AbstractService {
     private final static Logger log = LoggerFactory.getLogger(Server.class);
     private final Config config;
     private ServerLauncher launcher;
+    @javax.inject.Inject
+    private Injector injector;
 
+    public Server() {
+        this(ConfigFactory.load(System.getProperty("seq.config", "seq")).withFallback(ConfigFactory.load("seq-default")));
+    }
 
     public Server(Config config) {
         this.config = config;
@@ -38,6 +45,10 @@ public class Server extends AbstractService {
     public static void main(String[] args) {
         Config config = ConfigFactory.load(System.getProperty("seq.config", "seq"));
         new Server(config).start();
+    }
+
+    public Injector getInjector() {
+        return injector;
     }
 
     @Override
@@ -61,6 +72,9 @@ public class Server extends AbstractService {
 
         @Override
         protected void configure() {
+            Modularize.serviceBinder(binder());
+            install(new PersistenceModule());
+            install(new SequenceManagerModule());
             try {
                 install(Modularize.installScanNamed(this.getClass().getClassLoader(), this.getClass().getPackage().getName(), new Predicate<Map.Entry<String, Class<? extends Module>>>() {
                     @Override
@@ -68,10 +82,9 @@ public class Server extends AbstractService {
                         if (input == null) {
                             return false;
                         }
-                        String path = "services." + input.getKey() + ".enable";
-                        // TODO Should use missing is enabled
-                        boolean enabled = !config.hasPath(path) || config.getBoolean(path);
-                        log.debug("Service {} is {}", input.getKey(), enabled ? "enabled" : "disabled");
+                        String path = "module." + input.getKey() + ".enabled";
+                        boolean enabled = config.hasPath(path) && config.getBoolean(path);
+                        log.debug("Module {} is {}", input.getKey(), enabled ? "enabled" : "disabled");
                         return enabled;
                     }
                 }));

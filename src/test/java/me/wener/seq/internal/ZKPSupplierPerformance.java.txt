@@ -65,7 +65,7 @@ public class ZKPSupplierPerformance {
             client.create().creatingParentsIfNeeded().withProtection().forPath("/seq/test/node");
             supplier = new ZookeeperSupplier(client, "/seq/test/node");
 //            supplier = MoreSuppliers.prefetch(supplier, 10);
-            supplier = Sequences.create(supplier, SequenceDeclare.asc().cache(1000).build());
+            supplier = Sequences.create(supplier, SequenceDeclare.asc().name("seq").cache(1000).build());
         }
 
         @TearDown(Level.Trial)

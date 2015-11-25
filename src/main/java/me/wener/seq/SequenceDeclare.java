@@ -29,6 +29,7 @@ public class SequenceDeclare {
     private final boolean cycle;
     private final int cache;
     private final boolean order;
+    private final Config attributes;
 
 
     private SequenceDeclare(Builder builder) {
@@ -39,7 +40,7 @@ public class SequenceDeclare {
         cycle = builder.cycle;
         cache = builder.cache;
         order = builder.order;
-        check();
+        attributes = builder.attributes;
     }
 
     /**
@@ -87,7 +88,7 @@ public class SequenceDeclare {
         attrs.put("order", order);
         attrs.put("cache", cache);
         attrs.put("name", name);
-        return ConfigFactory.parseMap(ImmutableMap.of("seq", attrs));
+        return ConfigFactory.parseMap(ImmutableMap.of("seq", attrs)).withFallback(attributes);
     }
 
 
@@ -209,6 +210,10 @@ public class SequenceDeclare {
         return order;
     }
 
+    public Config getAttributes() {
+        return attributes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -241,6 +246,7 @@ public class SequenceDeclare {
         private boolean cycle;
         private int cache;
         private boolean order;
+        private Config attributes = ConfigFactory.empty();
 
         public Builder() {
         }
@@ -253,6 +259,7 @@ public class SequenceDeclare {
             this.cycle = copy.cycle;
             this.cache = copy.cache;
             this.order = copy.order;
+            this.attributes = copy.attributes;
         }
 
 
@@ -288,6 +295,11 @@ public class SequenceDeclare {
 
         public Builder order(boolean val) {
             order = val;
+            return this;
+        }
+
+        public Builder attributes(Config val) {
+            attributes = val;
             return this;
         }
 

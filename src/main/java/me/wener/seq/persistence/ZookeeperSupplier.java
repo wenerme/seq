@@ -25,12 +25,16 @@ public class ZookeeperSupplier implements Supplier<Long> {
             String node = client.create()
                     .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)
                     .forPath(path);
-            // Expected [1,+∞]
+            // Expected [1,+∞], need [0,+∞]
             return Long.parseLong(node.substring(node.length() - 10)) - 1;
         } catch (KeeperException.NoNodeException e) {
             throw new SequenceException("Sequence not exists", e, Exceptions.NOT_FOUND);
         } catch (Exception e) {
             throw new SequenceException(e, Exceptions.UNKNOWN);
         }
+    }
+
+    public long current() {
+        return 0;
     }
 }

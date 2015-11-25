@@ -5,6 +5,8 @@ import com.google.inject.AbstractModule;
 import javax.inject.Named;
 
 /**
+ * Expose a SequenceManager to gRPC
+ *
  * @author wener
  * @since 15/11/18
  */

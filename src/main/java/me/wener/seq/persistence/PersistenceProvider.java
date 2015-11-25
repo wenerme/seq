@@ -11,5 +11,5 @@ public interface PersistenceProvider {
     /**
      * @return absent if type not match
      */
-    Optional<PersistenceSequenceManager> create(String type, String name, Config config);
+    Optional<PersistenceSequence> create(String type, String name, Config config);
 }

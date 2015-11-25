@@ -1,10 +1,11 @@
 package me.wener.seq.persistence;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.typesafe.config.Config;
-import me.wener.seq.SequenceDeclare;
-
-import java.util.Set;
+import com.typesafe.config.ConfigFactory;
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.utils.ZKPaths;
 
 /**
  * @author wener
@@ -12,21 +13,25 @@ import java.util.Set;
  */
 public class ZookeeperPersistenceProvider implements PersistenceProvider {
     @Override
-    public Optional<PersistenceSequenceManager> create(String type, String name, Config config) {
+    public Optional<PersistenceSequence> create(String type, String name, Config config) {
         if (!"zookeeper".equals(type)) {
             return Optional.absent();
         }
-        return Optional.<PersistenceSequenceManager>of(new ZookeeperSequenceManager(name, config));
+        return Optional.<PersistenceSequence>of(new ZookeeperSequence(name, config));
     }
 
-    static class ZookeeperSequenceManager implements PersistenceSequenceManager {
-
+    static class ZookeeperSequence implements PersistenceSequence {
+        public static final Config DEFAULT_CONFIG = ConfigFactory.parseMap(ImmutableMap.of("root", "seq"));
         private final String name;
         private final Config config;
+        private final CuratorFramework client;
+        private final String root;
 
-        public ZookeeperSequenceManager(String name, Config config) {
+        public ZookeeperSequence(String name, Config config) {
             this.name = name;
-            this.config = config;
+            this.config = config.withFallback(DEFAULT_CONFIG);
+            root = config.getString("root");
+            client = null;
         }
 
         @Override
@@ -40,28 +45,13 @@ public class ZookeeperPersistenceProvider implements PersistenceProvider {
         }
 
         @Override
-        public void create(SequenceDeclare declare) {
+        public void delete(String name) {
 
         }
 
         @Override
-        public void drop(String name) {
+        public void create(String name) {
 
-        }
-
-        @Override
-        public void update(SequenceDeclare declare) {
-
-        }
-
-        @Override
-        public Set<String> sequences() {
-            return null;
-        }
-
-        @Override
-        public SequenceDeclare get(String name) {
-            return null;
         }
 
         @Override
@@ -70,13 +60,24 @@ public class ZookeeperPersistenceProvider implements PersistenceProvider {
         }
 
         @Override
-        public long reset(String name, long reset) {
+        public long current(String name) {
             return 0;
         }
 
         @Override
-        public long current(String name) {
-            return 0;
+        public boolean reset(String name, long reset) {
+            return false;
+        }
+
+        private String path(String name) {
+            return ZKPaths.makePath(root, name);
+        }
+
+        private static class Seq extends ZookeeperSupplier {
+
+            public Seq(CuratorFramework client, String path) {
+                super(client, path);
+            }
         }
     }
 }

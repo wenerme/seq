@@ -73,8 +73,8 @@ public class Modularize {
         return Multibinder.newSetBinder(binder, Service.class);
     }
 
-    public static Config serviceConfig(Config c, String svc) {
-        String path = "service." + Preconditions.checkNotNull(svc);
+    public static Config moduleConfig(Config c, String svc) {
+        String path = "module." + Preconditions.checkNotNull(svc);
         return c.hasPath(path) ? c.getConfig(path) : ConfigFactory.empty();
     }
 }

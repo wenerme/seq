@@ -1,15 +1,12 @@
 package me.wener.seq.persistence;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.typesafe.config.Config;
 import me.wener.seq.Exceptions;
-import me.wener.seq.SequenceDeclare;
 
 import javax.annotation.Nonnull;
 import javax.inject.Singleton;
-import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -20,19 +17,19 @@ import java.util.concurrent.atomic.AtomicLong;
 @Singleton
 public class InMemoryPersistenceProvider implements PersistenceProvider {
     @Override
-    public Optional<PersistenceSequenceManager> create(String type, String name, Config config) {
+    public Optional<PersistenceSequence> create(String type, String name, Config config) {
         if (!"in-memory".equals(type)) {
             return Optional.absent();
         }
-        return Optional.<PersistenceSequenceManager>of(new InMemSequenceManager(name, config));
+        return Optional.<PersistenceSequence>of(new InMemSequence(name, config));
     }
 
-    static class InMemSequenceManager implements PersistenceSequenceManager {
+    static class InMemSequence implements PersistenceSequence {
         private final ConcurrentMap<String, Seq> longs = Maps.newConcurrentMap();
         private final String name;
         private final Config config;
 
-        public InMemSequenceManager(String name, Config config) {
+        public InMemSequence(String name, Config config) {
             this.name = name;
             this.config = config;
         }
@@ -48,47 +45,21 @@ public class InMemoryPersistenceProvider implements PersistenceProvider {
         }
 
         @Override
-        public void create(SequenceDeclare attrs) {
-            Seq seq = new Seq(attrs);
-            if (longs.putIfAbsent(attrs.getName(), seq) != null) {
-                throw Exceptions.create(Exceptions.ALREADY_EXISTS, "Seq %s already exists", attrs.getName());
-            }
-        }
-
-        @Override
-        public void drop(String name) {
+        public void delete(String name) {
             longs.remove(name);
         }
 
         @Override
-        public void update(SequenceDeclare declare) {
-            Seq old = seq(declare.getName());
-            Seq seq = new Seq(declare);
-            if (!longs.replace(declare.getName(), old, seq)) {
-                throw Exceptions.create(Exceptions.UNKNOWN, "Sequence %s has been update by others", declare.getName());
+        public void create(String name) {
+            if (longs.putIfAbsent(name, new Seq()) != null) {
+                throw Exceptions.create(Exceptions.ALREADY_EXISTS, "Seq %s already exists", name);
             }
         }
 
-        @Override
-        public Set<String> sequences() {
-            return ImmutableSet.copyOf(longs.keySet());
-        }
-
-        @Override
-        public SequenceDeclare get(String name) {
-            return seq(name).declare;
-        }
 
         @Override
         public long next(String name) {
             return seq(name).l.getAndIncrement();
-        }
-
-        @Override
-        public long reset(String name, long reset) {
-            Seq seq = seq(name);
-            seq.l.set(reset);
-            return seq.l.get();
         }
 
         private
@@ -106,13 +77,13 @@ public class InMemoryPersistenceProvider implements PersistenceProvider {
             return seq(name).l.get();
         }
 
+        @Override
+        public boolean reset(String name, long reset) {
+            return false;
+        }
+
         static class Seq {
             private final AtomicLong l = new AtomicLong();
-            private final SequenceDeclare declare;
-
-            Seq(SequenceDeclare declare) {
-                this.declare = declare;
-            }
         }
     }
 }

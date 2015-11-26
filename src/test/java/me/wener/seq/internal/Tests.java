@@ -1,6 +1,5 @@
 package me.wener.seq.internal;
 
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 
 import java.util.Arrays;
@@ -11,10 +10,10 @@ import static org.junit.Assert.assertArrayEquals;
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 public class Tests {
-    public static void expected(Supplier<Long> src, long... numbers) {
+    public static void expected(LongSupplier src, long... numbers) {
         long[] actuals = new long[numbers.length];
         for (int i = 0; i < actuals.length; i++) {
-            actuals[i] = src.get();
+            actuals[i] = src.getAsLong();
         }
         try {
             assertArrayEquals(numbers, actuals);

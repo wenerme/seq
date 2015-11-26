@@ -20,6 +20,7 @@ public class SequenceLogicalTest {
 
     @Test
     public void testUnboundDesc() {
+        expected(create(SequenceDeclare.desc().build()), -1, -2, -3, -4, -5, -6, -7);
         expected(create(SequenceDeclare.desc().increment(-2).build()), -1, -3, -5, -7, -9, -11, -13, -15, -17, -19, -21);
         expected(create(SequenceDeclare.desc().max(-10).increment(-2).build()), -10, -12, -14, -16, -18, -20, -22);
         expected(create(SequenceDeclare.desc().max(-10).increment(-20).build()), -10, -30, -50, -70, -90);

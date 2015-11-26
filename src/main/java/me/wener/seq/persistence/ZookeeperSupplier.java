@@ -1,8 +1,8 @@
 package me.wener.seq.persistence;
 
-import com.google.common.base.Supplier;
 import me.wener.seq.Exceptions;
 import me.wener.seq.SequenceException;
+import me.wener.seq.internal.LongSupplier;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -10,7 +10,7 @@ import org.apache.zookeeper.KeeperException;
 /**
  * @author <a href="http://github.com/wenerme">wener</a>
  */
-public class ZookeeperSupplier implements Supplier<Long> {
+public class ZookeeperSupplier implements LongSupplier {
     private final CuratorFramework client;
     private final String path;
 
@@ -20,7 +20,7 @@ public class ZookeeperSupplier implements Supplier<Long> {
     }
 
     @Override
-    public Long get() {
+    public long getAsLong() {
         try {
             String node = client.create()
                     .withMode(CreateMode.EPHEMERAL_SEQUENTIAL)

@@ -44,20 +44,21 @@ public class SequenceDeclare {
         cache = builder.cache;
         order = builder.order;
         attributes = builder.attributes;
+        check();
     }
 
     /**
      * Default ascending sequence declare
      */
     public static Builder asc() {
-        return new Builder().cache(1).increment(1).max(NO_MAX).min(1).order(false);
+        return new Builder().name("asc").cache(1).increment(1).max(NO_MAX).min(1).order(false);
     }
 
     /**
      * Default descending sequence declare
      */
     public static Builder desc() {
-        return new Builder().cache(1).increment(-1).max(-1).min(Long.MIN_VALUE).order(false);
+        return new Builder().name("desc").cache(1).increment(-1).max(-1).min(Long.MIN_VALUE).order(false);
     }
 
     /**

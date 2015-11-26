@@ -1,8 +1,12 @@
 package me.wener.seq.internal;
 
+import com.google.common.base.Function;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import me.wener.seq.SequenceDeclare;
 import me.wener.seq.SequenceException;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.concurrent.atomic.AtomicLong;
@@ -12,17 +16,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Make a sequence generator from a [0,+∞].
- * This implementation is focus on performance, if java 8 is available, should rewrite this in lambda ?
+ * This implementation is focus on performance, if java 8 is available, should rewrite this in lambda.
  *
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 public class Sequences {
+
     private static final Multiplication FUNC_NEG = new Multiplication(-1);
 
     private Sequences() {
     }
 
-    public static LongSupplier supplier(AtomicLong v) {
+    public static Supplier<Long> supplier(AtomicLong v) {
         return new AtomicSupplier(v);
     }
 
@@ -50,18 +55,18 @@ public class Sequences {
         }
     }
 
-    public static LongSupplier create(SequenceDeclare seq) {
+    public static Supplier<Long> create(SequenceDeclare seq) {
         return create(seq.getMin(), seq.getMax(), seq.getIncrement(), seq.getCache(), seq.isCycle());
     }
 
     /**
      * Create with a atomic long
      */
-    public static LongSupplier create(long min, long max, long inc, long cache, boolean cycle) {
+    public static Supplier<Long> create(long min, long max, long inc, long cache, boolean cycle) {
         return create(supplier(new AtomicLong()), min, max, inc, cache, cycle);
     }
 
-    public static LongSupplier create(final LongSupplier src, SequenceDeclare seq) {
+    public static Supplier<Long> create(final Supplier<Long> src, SequenceDeclare seq) {
         return create(src, seq.getMin(), seq.getMax(), seq.getIncrement(), seq.getCache(), seq.isCycle());
     }
 
@@ -75,9 +80,9 @@ public class Sequences {
     /**
      * 使用指定的条件创建
      */
-    public static LongSupplier create(final LongSupplier src, final long minVal, final long maxVal, final long inc, final long cache, final boolean cycle) {
+    public static Supplier<Long> create(final Supplier<Long> src, final long minVal, final long maxVal, final long inc, final long cache, final boolean cycle) {
         check(minVal, maxVal, inc, cache, cycle);
-        LongSupplier r = checkNotNull(src, "src");
+        Supplier<Long> r = checkNotNull(src, "src");
         if (cache > 1) {
             r = new Cache(r, cache);
         }
@@ -116,9 +121,9 @@ public class Sequences {
 
             if (minVal == Long.MIN_VALUE) {
                 if (maxVal == 0) {
-                    return MoreSuppliers.compose(r, new Multiplication(inc));
+                    return Suppliers.compose(new Multiplication(inc), r);
                 } else {
-                    return MoreSuppliers.compose(r, new Factor(inc, maxVal));
+                    return Suppliers.compose(new Factor(inc, maxVal), r);
                 }
             }
             return MoreSuppliers.compose(r, new LongDescSequence(minVal, maxVal, inc, cycle));
@@ -126,21 +131,21 @@ public class Sequences {
     }
 
     @NotThreadSafe
-    private static class Cache implements LongSupplier {
-        final LongSupplier original;
+    private static class Cache implements Supplier<Long> {
+        final Supplier<Long> original;
         final long cache;
-        long v, c;
-        long margin;
+        Long v, c;
+        Long margin;
 
-        private Cache(LongSupplier original, long cache) {
+        private Cache(Supplier<Long> original, long cache) {
             this.original = original;
             this.cache = cache;
         }
 
         @Override
-        public long getAsLong() {
-            if (v >= margin) {
-                v = original.getAsLong() * cache;
+        public Long get() {
+            if (v == null || v >= margin) {
+                v = original.get() * cache;
                 margin = v + cache;
             }
             c = v;
@@ -150,7 +155,7 @@ public class Sequences {
     }
 
     @ThreadSafe
-    private static class AscRange implements LongFunction {
+    private static class AscRange implements Function<Long, Long> {
         final long min;
         final long max;
         final long distance;
@@ -164,7 +169,7 @@ public class Sequences {
         }
 
         @Override
-        public long apply(final long v) {
+        public Long apply(final Long v) {
             long c = v + min;
             if (c > max) {
                 if (cycle) {
@@ -178,7 +183,7 @@ public class Sequences {
     }
 
     @ThreadSafe
-    private static class DescRange implements LongFunction {
+    private static class DescRange implements Function<Long, Long> {
         final long min;
         final long max;
         final long distance;
@@ -192,7 +197,7 @@ public class Sequences {
         }
 
         @Override
-        public long apply(final long v) {
+        public Long apply(final Long v) {
             long c = v + max;
             if (c < min) {
                 if (cycle) {
@@ -206,7 +211,7 @@ public class Sequences {
     }
 
     @ThreadSafe
-    private static class LongAscSequence implements LongFunction {
+    private static class LongAscSequence implements Function<Long, Long> {
         final long min;
         final long max;
         final long inc;
@@ -225,12 +230,13 @@ public class Sequences {
         }
 
 
+        @Nullable
         @Override
-        public long apply(final long c) {
+        public Long apply(final Long c) {
             if (!more) {
                 throw new SequenceException("Exhausted sequence");
             }
-            long v = c * inc;
+            Long v = c * inc;
             if (cycle) {
                 if (v > max) {
                     v = (c % num) * inc;
@@ -244,7 +250,7 @@ public class Sequences {
     }
 
     @ThreadSafe
-    private static class LongDescSequence implements LongFunction {
+    private static class LongDescSequence implements Function<Long, Long> {
         final long min;
         final long max;
         final long inc;
@@ -262,12 +268,13 @@ public class Sequences {
         }
 
 
+        @Nullable
         @Override
-        public long apply(final long c) {
+        public Long apply(final Long c) {
             if (!more) {
                 throw new SequenceException("Exhausted sequence");
             }
-            long v = c * inc;
+            Long v = c * inc;
             if (cycle) {
                 if (v < min) {
                     v = (c % num) * inc;
@@ -281,7 +288,7 @@ public class Sequences {
     }
 
     @ThreadSafe
-    private static class AtomicSupplier implements LongSupplier {
+    private static class AtomicSupplier implements Supplier<Long> {
         private final AtomicLong v;
 
         private AtomicSupplier(AtomicLong v) {
@@ -289,13 +296,13 @@ public class Sequences {
         }
 
         @Override
-        public long getAsLong() {
+        public Long get() {
             return v.getAndIncrement();
         }
     }
 
     @ThreadSafe
-    private static class Multiplication implements LongFunction {
+    private static class Multiplication implements Function<Long, Long> {
         final long val;
 
         private Multiplication(long val) {
@@ -303,13 +310,13 @@ public class Sequences {
         }
 
         @Override
-        public long apply(final long v) {
+        public Long apply(final Long v) {
             return v * val;
         }
     }
 
     @ThreadSafe
-    private static class Factor implements LongFunction {
+    private static class Factor implements Function<Long, Long> {
         final long a, b;
 
         private Factor(long a, long b) {
@@ -318,13 +325,13 @@ public class Sequences {
         }
 
         @Override
-        public long apply(final long v) {
+        public Long apply(final Long v) {
             return v * a + b;
         }
     }
 
     @ThreadSafe
-    private static class Addition implements LongFunction {
+    private static class Addition implements Function<Long, Long> {
         final long val;
 
         private Addition(long val) {
@@ -332,7 +339,7 @@ public class Sequences {
         }
 
         @Override
-        public long apply(final long v) {
+        public Long apply(final Long v) {
             return v + val;
         }
     }

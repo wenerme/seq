@@ -1,6 +1,5 @@
 package me.wener.seq.internal;
 
-import com.google.common.base.Supplier;
 import me.wener.seq.SequenceDeclare;
 import me.wener.seq.persistence.ZookeeperSupplier;
 import org.apache.curator.framework.CuratorFramework;
@@ -8,10 +7,11 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryOneTime;
 import org.apache.curator.test.TestingServer;
 import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.ChainedOptionsBuilder;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.VerboseMode;
 
 import java.io.IOException;
 
@@ -24,15 +24,16 @@ public class ZKPSupplierPerformance {
     private static TestingServer server;
 
     public static void main(String[] args) throws RunnerException {
-        Options opt = new OptionsBuilder()
+        ChainedOptionsBuilder builder = new OptionsBuilder()
                 .include(ZKPSupplierPerformance.class.getSimpleName())
                 .warmupIterations(5)
                 .measurementIterations(5)
                 .threads(4)
-                .forks(1)
-                .build();
+                .verbosity(VerboseMode.SILENT)
+                .forks(1);
 
-        new Runner(opt).run();
+        Benchmarks.output(null);
+        Benchmarks.threads(builder, 1, 2, 4, 6);
     }
 
     @Setup
@@ -49,14 +50,14 @@ public class ZKPSupplierPerformance {
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void get(ClientState c) {
-        c.supplier.get();
+    public void get(ClientState c, Blackhole bh) {
+        bh.consume(c.supplier.getAsLong());
     }
 
     @State(Scope.Thread)
     public static class ClientState {
         CuratorFramework client;
-        Supplier<Long> supplier;
+        LongSupplier supplier;
 
         @Setup(Level.Trial)
         public void up() throws Exception {

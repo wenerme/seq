@@ -3,12 +3,28 @@ package me.wener.seq.internal;
 import com.google.common.base.*;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.concurrent.*;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author <a href="http://github.com/wenerme">wener</a>
  */
 public class MoreSuppliers {
+    public static LongSupplier compose(LongSupplier supplier, LongFunction function) {
+        return new LongSupplierComposition(function, supplier);
+    }
+
+    public static LongSupplier compose(LongSupplier supplier, LongFunction a, LongFunction b) {
+        return compose(supplier, compose(a, b));
+    }
+
+    private static LongFunction compose(LongFunction a, LongFunction b) {
+        return new LongFunctionComposition(a, b);
+    }
+
     public static <T, F> Supplier<T> compose(Supplier<F> supplier, Function<? super F, T> function) {
         return Suppliers.compose(function, supplier);
     }
@@ -89,6 +105,79 @@ public class MoreSuppliers {
                     Thread.interrupted();
                 }
             }
+        }
+    }
+
+
+    private static class LongSupplierComposition
+            implements LongSupplier, Serializable {
+        private static final long serialVersionUID = 0;
+        final LongFunction function;
+        final LongSupplier supplier;
+
+        LongSupplierComposition(LongFunction function, LongSupplier supplier) {
+            this.function = function;
+            this.supplier = supplier;
+        }
+
+        @Override
+        public long getAsLong() {
+            return function.apply(supplier.getAsLong());
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (obj instanceof LongSupplierComposition) {
+                LongSupplierComposition that = (LongSupplierComposition) obj;
+                return function.equals(that.function) && supplier.equals(that.supplier);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(function, supplier);
+        }
+
+        @Override
+        public String toString() {
+            return "LongSupplierComposition.compose(" + function + ", " + supplier + ")";
+        }
+    }
+
+
+    private static class LongFunctionComposition implements LongFunction, Serializable {
+        private static final long serialVersionUID = 0;
+        private final LongFunction g;
+        private final LongFunction f;
+
+        public LongFunctionComposition(LongFunction g, LongFunction f) {
+            this.g = checkNotNull(g);
+            this.f = checkNotNull(f);
+        }
+
+        @Override
+        public long apply(long a) {
+            return g.apply(f.apply(a));
+        }
+
+        @Override
+        public boolean equals(@Nullable Object obj) {
+            if (obj instanceof LongFunctionComposition) {
+                LongFunctionComposition that = (LongFunctionComposition) obj;
+                return f.equals(that.f) && g.equals(that.g);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return f.hashCode() ^ g.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return g + "(" + f + ")";
         }
     }
 }

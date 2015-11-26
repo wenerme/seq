@@ -40,7 +40,7 @@ public class ZKSupplierTest {
         client.create().creatingParentsIfNeeded().withProtection().forPath("/seq/test/node");
         ZookeeperSupplier supplier = new ZookeeperSupplier(client, "/seq/test/node");
         for (long i = 0; i < 100; i++) {
-            assertEquals(i, (long) supplier.get());
+            assertEquals(i, supplier.getAsLong());
         }
     }
 

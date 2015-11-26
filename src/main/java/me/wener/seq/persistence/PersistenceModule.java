@@ -20,22 +20,22 @@ import java.util.concurrent.ConcurrentMap;
 public class PersistenceModule extends PrivateModule {
     @Override
     protected void configure() {
-        Multibinder<PersistenceProvider> setBinder = Multibinder.newSetBinder(binder(), PersistenceProvider.class);
-        setBinder.addBinding().to(InMemoryPersistenceProvider.class);
-        setBinder.addBinding().to(RedisPersistenceProvider.class);
-        expose(PersistenceProvider.class);
-        OptionalBinder.newOptionalBinder(binder(), PersistenceProvider.class).setDefault().to(MultiPersistenceProvider.class);
+        Multibinder<PersistenceFactory> setBinder = Multibinder.newSetBinder(binder(), PersistenceFactory.class);
+        setBinder.addBinding().to(InMemoryPersistenceFactory.class);
+        setBinder.addBinding().to(RedisPersistenceFactory.class);
+        expose(PersistenceFactory.class);
+        OptionalBinder.newOptionalBinder(binder(), PersistenceFactory.class).setDefault().to(MultiPersistenceFactory.class);
     }
 
     @Singleton
-    private static class MultiPersistenceProvider implements PersistenceProvider {
+    private static class MultiPersistenceFactory implements PersistenceFactory {
 
-        private final Set<PersistenceProvider> providers;
+        private final Set<PersistenceFactory> providers;
         private final String defaultProvider;
-        private final ConcurrentMap<String, PersistenceSequence> managers = Maps.newConcurrentMap();
+        private final ConcurrentMap<String, PersistenceProvider> managers = Maps.newConcurrentMap();
 
         @Inject
-        private MultiPersistenceProvider(Set<PersistenceProvider> providers, Config config) {
+        private MultiPersistenceFactory(Set<PersistenceFactory> providers, Config config) {
             this.providers = providers;
             if (config.hasPath("persistence.default")) {
                 defaultProvider = config.getString("persistence.default");
@@ -48,12 +48,12 @@ public class PersistenceModule extends PrivateModule {
         }
 
         @Override
-        public Optional<PersistenceSequence> create(String type, String name, Config config) {
+        public Optional<PersistenceProvider> create(String type, String name, Config config) {
             if (Strings.isNullOrEmpty(name) && defaultProvider != null) {
 
             }
-            for (PersistenceProvider provider : providers) {
-                Optional<PersistenceSequence> o = provider.create(type, name, config);
+            for (PersistenceFactory provider : providers) {
+                Optional<PersistenceProvider> o = provider.create(type, name, config);
                 if (o.isPresent()) {
                     return o;
                 }

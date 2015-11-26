@@ -2,7 +2,7 @@ package me.wener.seq;
 
 import com.google.common.base.Supplier;
 import me.wener.seq.persistence.PersistenceManager;
-import me.wener.seq.persistence.PersistenceSequence;
+import me.wener.seq.persistence.PersistenceProvider;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -27,7 +27,7 @@ public class LocalSequenceManager implements SequenceManager {
     public void create(SequenceDeclare declare) {
     }
 
-    private PersistenceSequence persistence(SequenceDeclare declare) {
+    private PersistenceProvider persistence(SequenceDeclare declare) {
         if (declare.getAttributes().hasPath("persistence")) {
             return persistenceManager.get(declare.getAttributes().getConfig("persistence"));
         } else {
@@ -73,7 +73,7 @@ public class LocalSequenceManager implements SequenceManager {
     private static class Seq {
         private final AtomicLong current = new AtomicLong();
         private SequenceDeclare declare;
-        private PersistenceSequence persistenceSequence;
+        private PersistenceProvider persistenceProvider;
         private Supplier<Long> supplier;
 
         long next() {

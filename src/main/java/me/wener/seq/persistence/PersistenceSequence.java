@@ -1,35 +1,26 @@
 package me.wener.seq.persistence;
 
-import javax.annotation.concurrent.ThreadSafe;
+import me.wener.seq.internal.LongSupplier;
 
 /**
- * A SequenceManager for persistence level, the sequence value of this is [0,+∞],
- * implementation of this interface should provide the basic sequence number to generate real sequence.
- *
  * @author wener
- * @since 15/11/24
+ * @since 15/11/26
  */
-@ThreadSafe
-public interface PersistenceSequence {
-    String getType();
+public interface PersistenceSequence extends LongSupplier {
+
+    /**
+     * @return Next sequence number
+     */
+    @Override
+    long getAsLong();
+
+    long current();
+
+    boolean reset(long reset);
 
     String getName();
 
-    void delete(String name);
+    String getProviderName();
 
-    void create(String name);
-
-    long next(String name);
-
-    long current(String name);
-
-    /**
-     * @return isResettable
-     */
-    boolean reset(String name, long reset);
-
-//    Supplier<Long> supplier(String name);
-    // Is this implement safe for distributed version ?
-    // If not, the wrapper should synchronize the method invocation
-    // boolean isSafeDistributed()
+    String getType();
 }

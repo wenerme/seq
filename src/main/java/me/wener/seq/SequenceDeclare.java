@@ -1,5 +1,6 @@
 package me.wener.seq;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -10,6 +11,7 @@ import me.wener.seq.internal.Sequences;
 
 import java.util.Map;
 
+import static com.google.common.base.CharMatcher.inRange;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -21,6 +23,7 @@ public class SequenceDeclare {
     public final static long NO_MAX = Long.MAX_VALUE;
     public final static long NO_MIN = Long.MIN_VALUE;
     public final static long NO_CACHE = 0;
+    private static final CharMatcher NAME_MATCHER = inRange('a', 'z').or(inRange('A', 'Z')).or(inRange('0', '9')).or(CharMatcher.anyOf("_-"));
     private final static Config DEFAULT_CONFIG = asc().name("DEFAULT").build().toConfig();
     private final String name;
     private final long max;
@@ -169,6 +172,7 @@ public class SequenceDeclare {
 
     private void check() {
         checkArgument(!Strings.isNullOrEmpty(name), "name is null or empty");
+        checkArgument(NAME_MATCHER.matchesAllOf(name), "Bad name format");
         Sequences.check(min, max, increment, cache, cycle);
     }
 

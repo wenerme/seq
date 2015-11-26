@@ -1,15 +1,26 @@
 package me.wener.seq.persistence;
 
-import com.google.common.base.Optional;
-import com.typesafe.config.Config;
+import javax.annotation.concurrent.ThreadSafe;
+import java.util.Set;
 
 /**
+ * A SequenceManager for persistence level, the sequence value of this is [0,+∞],
+ * implementation of this interface should provide the basic sequence number to generate real sequence.
+ *
  * @author wener
- * @since 15/11/21
+ * @since 15/11/24
  */
+@ThreadSafe
 public interface PersistenceProvider {
-    /**
-     * @return absent if type not match
-     */
-    Optional<PersistenceSequence> create(String type, String name, Config config);
+    String getType();
+
+    String getName();
+
+    void delete(String name);
+
+    PersistenceSequence create(String name);
+
+    PersistenceSequence get(String name);
+
+    Set<String> sequences();
 }
